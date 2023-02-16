@@ -1,0 +1,36 @@
+sistema de archivos FAT (file allocation table):
+
+FAT es el acrónimo de File Allocation Table (Tabla de asignación de archivos).Es el elemento principal de este sistema de archivos. Se desarrolló inicialmente para MS-DOS y ha continuado con la gran mayoría de versiones de Windows aunque también es compatible con la gran mayoría de las versiones Linux.
+
+El sistema FAT sigue la técnica de asignación indexada. 
+
+Asignación indexada (Indexed Allocation): Se mantiene una tabla en donde
+cada entrada referencia a un bloque de datos.
+
+*Los bloques son accedidos
+directamente a través del bloque
+de indexación (index block).
+
+*El bloque de indexación ocupa
+lugar. Se trata de que sea lo más
+pequeño posible, pero limita la
+cantidad de bloques.
+
+*Una posible alternativa es
+indexación en varios niveles.
+Algunos índices hacen referencia
+a bloques directos y otros a
+bloques de indexación.
+
+La Estructura del sistema de archivos FAT se basa en varios sectores, como:
+
+* Sector de arranque:  Es la parte que contiene el gestor de arranque del sistema operativo. 
+
+* Región FAT: Esta parte identifica las copias del archivo en la Tabla de Asignación de Archivos, lo que permite al sistema asignar un clúster específico a cada flujo de datos.
+
+* Región de datos:  Es donde se almacenan los datos que utilizas, es decir, imágenes, documentos, archivos de audio u otros archivos multimedia.
+
+* Región del directorio raíz/Root: 
+Este sector es más bien una tabla de directorios que especifica la información relativa a los archivos y su directorio.
+
+
