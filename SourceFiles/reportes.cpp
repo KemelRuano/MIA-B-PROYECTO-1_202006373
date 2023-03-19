@@ -1,6 +1,7 @@
 #include "../HeaderFiles/reportes.h"
 #include "../HeaderFiles/AdminDisk.h"
 #include "../HeaderFiles/Class_Estruct.h"
+#include "../HeaderFiles/AdminFiles.h"
 #include <iostream>
 #include <string.h>
 #include <string>
@@ -12,9 +13,10 @@
 #include <cmath>
 using namespace std;
 
-void reportes::passDate(AdminDisk admin)
+void reportes::passDate(AdminDisk admin,AdminFiles files)
 {
     admindisk = admin;
+    adfile = files;
 }
 
 string reportes::minusculas(string str)
@@ -74,6 +76,8 @@ void reportes::generarReportes(string name, string pt, string ids, string rute)
            Block(path, path_disco, particion);
         }else if(minusculas(nombre) == "sb"){
             superbloque(path,path_disco,particion);
+        }else if(minusculas(nombre) == "tree"){
+            tree(path,path_disco,particion);
         }else{
             cout << "[rep] --- No existe este tipo de reporte" << endl;
             return;
@@ -711,4 +715,170 @@ void reportes::superbloque(string ruta, string path,Estructuras::Partition encon
 }
 
 
+void reportes::tree(string ruta, string path,Estructuras::Partition partition) {
+   
+        Estructuras::Superblock spr;
+        Estructuras::Inodes inode;
 
+        FILE *file = fopen(path.c_str(), "rb+");
+        if (file == NULL) {
+            throw runtime_error("disco no existente");
+        }
+
+        fseek(file, partition.part_start, SEEK_SET);
+        fread(&spr, sizeof(Estructuras::Superblock), 1, file);
+
+        fseek(file, spr.s_inode_start, SEEK_SET);
+        fread(&inode, sizeof(Estructuras::Inodes), 1, file);
+
+        int freeI = adfile.Inodosiguiente(spr,path);
+
+        string rutaimage;
+        string rutadot = ruta.substr(0, ruta.find('.'));
+        rutaimage = rutadot + ".jpg";
+        rutadot += ".dot";
+
+        if (admindisk.ver_existeCarpeta(admindisk.obtner_rutaCarpeta(ruta)) == false){
+            if (mkdir(ruta.c_str(), 0755) == 0);
+        }
+
+       
+        string content;
+        content = "digraph G{\n"
+                  "rankdir=LR;\n"
+                  "graph [ dpi = \"600\" ]; \n"
+                  "forcelabels= true;\n"
+                  "node [shape = plaintext];\n";
+
+        for (int i = 0; i < freeI; ++i) {
+            content += "inode" + to_string(i) + "  [label = <<table>\n"
+                                                "<tr><td COLSPAN = '2' BGCOLOR=\"#000080\"><font color=\"white\">INODO " +
+                       to_string(i) + "</font></td></tr>\n"
+                                      "<tr><td BGCOLOR=\"#87CEFA\">NOMBRE</td><td BGCOLOR=\"#87CEFA\" >VALOR</td></tr>\n"
+                                      "<tr>\n"
+                                      "<td>i_uid</td>\n"
+                                      "<td>" +
+                       to_string(inode.i_uid) + "</td>\n"
+                                                "</tr>\n"
+                                                "<tr>\n"
+                                                "<td>i_gid</td>\n"
+                                                "<td>" +
+                       to_string(inode.i_gid) + "</td>\n"
+                                                "</tr>\n"
+                                                "<tr>\n"
+                                                "<td>i_size</td>\n"
+                                                "<td>" +
+                       to_string(inode.i_size) + "</td>\n"
+                                                 "</tr>\n"
+                                                 "<tr>\n"
+                                                 "<td>i_atime</td>\n"
+                                                 "<td>" +
+                       to_string(inode.i_atime) + "</td>\n"
+                                       "</tr>\n"
+                                       "<tr>\n"
+                                       "<td>i_ctime</td>\n"
+                                       "<td>" +
+                       to_string(inode.i_ctime) + "</td>\n"
+                                       "</tr>\n"
+                                       "<tr>\n"
+                                       "<td>i_mtime</td>\n"
+                                       "<td>" +
+                       to_string(inode.i_mtime) + "</td>\n"
+                                       "</tr>\n";
+            for (int j = 0; j < 15; ++j) {
+                content += "<tr>\n"
+                           "<td>i_block_" + to_string(j + 1) + "</td>\n"
+                                                               "<td port=\"" + to_string(j) + "\">" +
+                           to_string(inode.i_block[j]) + "</td>\n"
+                                                         "</tr>\n";
+            }
+            content += "<tr>\n"
+                       "<td>i_type</td>\n"
+                       "<td>" + to_string(inode.i_type) + "</td>\n"
+                                                          "</tr>\n"
+                                                          "<tr>\n"
+                                                          "<td>i_perm</td>\n"
+                                                          "<td>" + to_string(inode.i_perm) + "</td>\n"
+                                                                                             "</tr>\n</table>>];\n";
+            if (inode.i_type == 0) {
+                for (int j = 0; j < 15; j++) {
+                    if (inode.i_block[j] != -1) {
+                        content +=
+                                "inode" + to_string(i) + ":" + to_string(j) + "-> BLOCK" + to_string(inode.i_block[j]) +
+                                "\n";
+
+                        Estructuras::Folderblock foldertmp;
+                        fseek(file, spr.s_block_start + (sizeof(Estructuras::Folderblock) * inode.i_block[j]),
+                              SEEK_SET);
+                        fread(&foldertmp, sizeof(Estructuras::Folderblock), 1, file);
+
+                        content += "BLOCK" + to_string(inode.i_block[j]) + "  [label = <<table>\n"
+                                                                           "<tr><td COLSPAN = '2' BGCOLOR=\"#145A32\"><font color=\"white\">BLOCK " +
+                                   to_string(inode.i_block[j]) + "</font></td></tr>\n"
+                                                                 "<tr><td BGCOLOR=\"#90EE90\">B_NAME</td><td BGCOLOR=\"#90EE90\" >B_INODO</td></tr>\n";
+                        for (int k = 0; k < 4; ++k) {
+                            string ctmp;
+                            ctmp += foldertmp.b_content[k].b_name;
+                            content += "<tr>\n"
+                                       "<td>" + ctmp + "</td>\n"
+                                                       "<td port=\"" + to_string(k) + "\">" +
+                                       to_string(foldertmp.b_content[k].b_inodo) + "</td>\n"
+                                                                                   "</tr>\n";
+                        }
+                        content += "</table>>];\n";
+
+                        for (int b = 0; b < 4; b++) { //VER SI ELIMINO
+                            if (foldertmp.b_content[b].b_inodo != -1) {
+                                string nm(foldertmp.b_content[b].b_name);
+                                if (!((nm == ".") || (nm == ".."))) {
+                                    content +=
+                                            "BLOCK" + to_string(inode.i_block[j]) + ":" + to_string(b) + " -> inode" +
+                                            to_string(foldertmp.b_content[b].b_inodo) + ";\n";
+                                }
+                            }
+                        }
+
+                        if (j > 11) {
+                            //Metodo para graficar bloques indirectos
+                        }
+                    }
+                }
+            } else {
+                for (int j = 0; j < 15; j++) {
+                    if (inode.i_block[j] != -1) {
+                        if (j < 12) {
+                            content +=
+                                    "inode" + to_string(i) + ":" + to_string(j) + "-> BLOCK" +
+                                    to_string(inode.i_block[j]) +
+                                    "\n";
+                            Estructuras::Fileblock filetmp;
+                            fseek(file, spr.s_block_start + (sizeof(Estructuras::Fileblock) * inode.i_block[j]),
+                                  SEEK_SET);
+                            fread(&filetmp, sizeof(Estructuras::Fileblock), 1, file);
+
+                            content += "BLOCK" + to_string(inode.i_block[j]) + " [label = <<table >\n"
+                                                                               "<tr><td COLSPAN = '2' BGCOLOR=\"#CCCC00\">BLOCK " +
+                                       to_string(inode.i_block[j]) +
+                                       "</td></tr>\n <tr><td COLSPAN = '2'>" + filetmp.b_content +
+                                       "</td></tr>\n</table>>];\n";
+                        }
+                    }
+                }
+            }
+            fseek(file, spr.s_inode_start + (sizeof(Estructuras::Inodes) * (i + 1)), SEEK_SET);
+            fread(&inode, sizeof(Estructuras::Inodes), 1, file);
+        }
+        fclose(file);
+        content += "\n\n}\n";
+
+        ofstream outfile(rutadot);
+        outfile << content.c_str() << endl;
+        outfile.close();
+        string dotneon = "dot -Tjpg  " + rutadot + " -o " + rutaimage;
+        system(dotneon.c_str());
+        cout << endl;
+        cout << "████████    [rep]--- Reporte TREE Generado con exito" << endl;
+        cout << endl;
+   
+  
+}

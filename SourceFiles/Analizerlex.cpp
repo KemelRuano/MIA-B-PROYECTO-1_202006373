@@ -583,7 +583,7 @@ void Analizerlex::ejecutar_comannd(vector<Tokens> List_token,string cadena){
 
 
     }else if(rep == true){
-            report.passDate(Disk);
+            report.passDate(Disk,adminfiles);
             bool name1  = cadena.find(">name=") != string::npos;
             bool id1    = cadena.find(">id=") != string::npos;
             bool path1  = cadena.find(">path=") != string::npos;

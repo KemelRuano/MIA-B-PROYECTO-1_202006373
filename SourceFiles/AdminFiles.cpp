@@ -48,6 +48,7 @@ int AdminFiles::Inodosiguiente(Estructuras::Superblock superbloque,string path){
                     return x;
             }
     }
+    fclose(Leer_modificar);
     return -1;
 }
 

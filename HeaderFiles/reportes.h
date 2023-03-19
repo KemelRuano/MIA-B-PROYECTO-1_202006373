@@ -1,12 +1,14 @@
 #ifndef REPORTES_H
 #define REPORTES_H
 #include "../HeaderFiles/AdminDisk.h"
+#include "../HeaderFiles/AdminFiles.h"
 
 class reportes{
     private:
     AdminDisk admindisk;
+    AdminFiles adfile;
     public:
-        void passDate(AdminDisk);
+        void passDate(AdminDisk,AdminFiles);
         void generarReportes(string name,string path,string id,string ruta);
         string  minusculas(string);
 
@@ -18,6 +20,7 @@ class reportes{
         void Block(string path,string ruta_disco,Estructuras::Partition);
         string Fecha(time_t valor);
         void superbloque(string ruta, string path,Estructuras::Partition encontrado);
+        void tree(string ruta, string path,Estructuras::Partition encontrado);
 
 };
 #endif
