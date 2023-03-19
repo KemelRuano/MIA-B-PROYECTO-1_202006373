@@ -31,49 +31,64 @@ class DATOS_PASS{
                 string path = "";
 
             } RMDISK;
+
+            typedef struct _mkfs{
+       
+                string type = "";
+                string id = "";
+                string fs = "";
+
+            } MKFS;
+
+            typedef struct _LOGIN{
+                string user;
+                string pass;
+                string id;
+            }Login;
+
+            typedef struct _MKGRP{
+                string reservada;
+            }MKGRP;
+
+            typedef struct _RMGRP{
+                string reservada;
+            }RMGRP;
+
+            typedef struct _MKUSR{
+                string user;
+                string pass;
+                string grupo;
+            }MKUSR;
+
+            typedef struct _REP{
+                string id;
+                string path;
+                string name;
+                string ruta;
+            }REP;
+
+
          
 
 };
 
-struct Transicion {
-    int status;
-    int inicio;
-    int fin;
-    int num_particion;
-};
 
-struct Nodo {
-    Transicion cambio;
-    Nodo* siguiente;
-    Nodo* anterior;
-};
 
-class ListaDobleEnlazada {
-private:
-    Nodo* primero;
-    Nodo* ultimo;
+typedef struct _mount_id {
+    string id;
+    string namePartition;
+}mount_id;
+
+class Mount {
 public:
-    ListaDobleEnlazada() {
-        primero = nullptr;
-        ultimo = nullptr;
+    std::string disco;
+    string path;
+    int cont;
+    std::vector<mount_id> ids;
+
+    void add_mount_Part(string id,string name) {
+        ids.push_back({id , name});
     }
-    
-    void agregarAlFinal(Transicion p) {
-        Nodo* nuevoNodo = new Nodo;
-        nuevoNodo->cambio = p;
-        nuevoNodo->siguiente = nullptr;
-        
-        if (ultimo == nullptr) {
-            nuevoNodo->anterior = nullptr;
-            primero = nuevoNodo;
-            ultimo = nuevoNodo;
-        } else {
-            nuevoNodo->anterior = ultimo;
-            ultimo->siguiente = nuevoNodo;
-            ultimo = nuevoNodo;
-        }
-    }
-    
- 
 };
 #endif
+
