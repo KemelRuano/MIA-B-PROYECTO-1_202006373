@@ -72,6 +72,8 @@ void reportes::generarReportes(string name, string pt, string ids, string rute)
               INODE(path, path_disco, particion);
         }else if(minusculas(nombre) == "block"){
            Block(path, path_disco, particion);
+        }else if(minusculas(nombre) == "sb"){
+            superbloque(path,path_disco,particion);
         }else{
             cout << "[rep] --- No existe este tipo de reporte" << endl;
             return;
@@ -223,8 +225,6 @@ void reportes::MBR(string ruta, string path)
     file << "}\n";
 
     file.close();
-    cout << rutadot << endl;
-
     string dotneon = "dot -Tpng " + rutadot + " -o " + rutaimage;
     system(dotneon.c_str());
 }
@@ -651,4 +651,64 @@ void reportes::Block(string ruta, string path,Estructuras::Partition encontrado)
 
 
 }
+
+
+void reportes::superbloque(string ruta, string path,Estructuras::Partition encontrado){
+
+    Estructuras::Superblock superbloque;
+    if (admindisk.ver_existeCarpeta(admindisk.obtner_rutaCarpeta(ruta)) == false){
+        if (mkdir(ruta.c_str(), 0755) == 0);
+    }
+    FILE *imprimir = fopen(path.c_str(), "r");
+    if (imprimir == NULL){
+        throw runtime_error("[fdisk]-- NO existe el disco");
+    }
+    string rutaimage;
+    string rutadot = ruta.substr(0, ruta.find('.'));
+    rutaimage = rutadot + ".png";
+    rutadot += ".dot";
+
+    fseek(imprimir,encontrado.part_start,SEEK_SET);
+    fread(&superbloque,sizeof(Estructuras::Superblock),1,imprimir);
+
+    ofstream file;
+    file.open(rutadot);
+    file << "digraph{  \n";
+    file << "   node[shape=plaintext]; \n";
+    file << "   graph [rankdir = LR bgcolor = white style=filled fontname = \"Courier New\"]; \n";
+    file << "   Tabla[fontname = \"Courier New\" label=<<table border=\"2\" cellspacing=\"1\" cellborder = \"2\" width = \"300\" bgcolor = \"black\"> \n";
+    file << "       <tr>  <td bgcolor=\"orange\" COLSPAN =\"2\" width = \"300\" height = \"50\"><b> SUPER_BLOQUE</b> </td>  </tr> \n";
+    file << "       <tr><td bgcolor=\"skyblue\"> filesystem_type  </td><td bgcolor=\"white\"> "+ to_string(superbloque.s_filesystem_type) +"</td></tr> \n";
+    file << "       <tr><td bgcolor=\"skyblue\"> Total inodos  </td><td bgcolor=\"white\"> "+ to_string(superbloque.s_inodes_count) +"</td></tr> \n";
+    file << "       <tr><td bgcolor=\"skyblue\"> Total bloques  </td><td bgcolor=\"white\"> "+ to_string(superbloque.s_blocks_count) +"</td></tr> \n";
+    file << "       <tr><td bgcolor=\"skyblue\"> Total bloques Libres  </td><td bgcolor=\"white\"> "+ to_string(superbloque.s_free_blocks_count) +"</td></tr> \n";
+    file << "       <tr><td bgcolor=\"skyblue\"> Total inodos Libres </td><td bgcolor=\"white\"> "+ to_string(superbloque.s_free_inodes_count) +"</td></tr> \n";
+    file << "       <tr><td bgcolor=\"skyblue\"> Ultima Fecha Montado </td><td bgcolor=\"white\"> "+ Fecha(superbloque.s_mtime) +"</td></tr> \n";
+    file << "       <tr><td bgcolor=\"skyblue\"> Ultima Fecha Desmontado </td><td bgcolor=\"white\"> "+ Fecha(superbloque.s_umtime) +"</td></tr> \n";
+    file << "       <tr><td bgcolor=\"skyblue\"> Desmontado  </td><td bgcolor=\"white\"> "+ to_string(superbloque.s_mnt_count) +"</td></tr> \n";
+    file << "       <tr><td bgcolor=\"skyblue\"> Magic  </td><td bgcolor=\"white\"> "+ to_string(superbloque.s_magic) +"</td></tr> \n";
+    file << "       <tr><td bgcolor=\"skyblue\"> Tamano Inodo  </td><td bgcolor=\"white\"> "+ to_string(superbloque.s_inode_size) +"</td></tr> \n";
+    file << "       <tr><td bgcolor=\"skyblue\"> Tamano Bloque  </td><td bgcolor=\"white\"> "+ to_string(superbloque.s_block_size) +"</td></tr> \n";
+    file << "       <tr><td bgcolor=\"skyblue\"> Primer Inodo Libre  </td><td bgcolor=\"white\"> "+ to_string(superbloque.s_fist_ino) +"</td></tr> \n";
+    file << "       <tr><td bgcolor=\"skyblue\"> Primer Bloque Libre  </td><td bgcolor=\"white\"> "+ to_string(superbloque.s_first_blo) +"</td></tr> \n";
+    file << "       <tr><td bgcolor=\"skyblue\"> Inicio BM Inodo  </td><td bgcolor=\"white\"> "+ to_string(superbloque.s_bm_inode_start) +"</td></tr> \n";
+    file << "       <tr><td bgcolor=\"skyblue\"> Inicio BM Bloque  </td><td bgcolor=\"white\"> "+ to_string(superbloque.s_bm_block_start) +"</td></tr> \n";
+    file << "       <tr><td bgcolor=\"skyblue\"> Inicio Tabla Inodo  </td><td bgcolor=\"white\"> "+ to_string(superbloque.s_inode_size) +"</td></tr> \n";
+    file << "       <tr><td bgcolor=\"skyblue\"> Inicio Tabla Bloques  </td><td bgcolor=\"white\"> "+ to_string(superbloque.s_block_start) +"</td></tr> \n";
+    file << "   </table>>]; \n";
+    file << "   label = \"Reporte SB By: Kemel Ruano\"; \n";
+    file << "}";
+    fclose(imprimir);
+    file.close();
+    string dotneon = "dot -Tpng " + rutadot + " -o " + rutaimage;
+    system(dotneon.c_str());
+    cout << endl;
+    cout << "████████    [rep]--- Reporte SB Generado con exito" << endl;
+    cout << endl;
+
+
+
+}
+
+
 

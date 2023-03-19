@@ -17,6 +17,7 @@ class reportes{
         void INODE(string path,string ruta_disco,Estructuras::Partition);
         void Block(string path,string ruta_disco,Estructuras::Partition);
         string Fecha(time_t valor);
+        void superbloque(string ruta, string path,Estructuras::Partition encontrado);
 
 };
 #endif
